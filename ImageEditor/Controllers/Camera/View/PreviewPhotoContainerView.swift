@@ -92,6 +92,9 @@ class PreviewPhotoContainerView: BaseClass {
         editorView.clearButton.addTarget(self, action: #selector(handleClear), for: .touchUpInside)
         editorView.undoButton.addTarget(self, action: #selector(handleUndo), for: .touchUpInside)
         bottomCollectionView.register(ColorSelectCell.self, forCellWithReuseIdentifier: cellID)
+        
+        previewImageView.addGestureRecognizer(UIPinchGestureRecognizer(target: self, action: #selector(handlePinch)))
+        
     }
 }
 
@@ -144,12 +147,13 @@ extension PreviewPhotoContainerView {
         if let error = error {
             // we got back an error!
             self.handlePhotoSave(message: error.localizedDescription)
-            
         } else {
             self.handlePhotoSave(message: "Saved Successfully")
             
         }
     }
+    
+    //MARK:- To Show user wheather Image saved or Not
     
     private func handlePhotoSave(message : String) {
         DispatchQueue.main.async {
@@ -230,6 +234,18 @@ extension PreviewPhotoContainerView {
     
     @objc fileprivate func handleSliderChange() {
         canvas.setStrokeWidth(width: slider.value)
+    }
+    
+    //MARK:- Pinch to Change size of Pointer
+    
+    @objc func handlePinch(_ pinch : UIPinchGestureRecognizer) {
+        if pinch.scale < 1.0 {
+            self.canvas.setStrokeWidth(width: 1)
+        }else{
+            self.canvas.setStrokeWidth(width: Float(pinch.scale))
+        }
+        
+        self.slider.setValue(Float(pinch.scale), animated: true)
     }
     
 }
