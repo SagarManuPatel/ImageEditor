@@ -14,21 +14,6 @@ class Canvas: UIView {
     fileprivate var strokeColor = UIColor.red
     fileprivate var strokeWidth: Float = 1
     
-    var image: UIImage! {
-        didSet{
-           imageView = UIImageView(frame: self.bounds)
-           imageView.image = image
-           self.addSubview(imageView)
-           self.setNeedsDisplay()
-        }
-    }
-    
-    var imageView : UIImageView = {
-        let i = UIImageView()
-        return i
-    }()
-    
-    
     func setStrokeWidth(width: Float) {
         self.strokeWidth = width
     }

@@ -12,8 +12,11 @@ class HomeViewController: UIViewController {
     
     let cameraButton : UIButton = {
         let btn = UIButton()
-        btn.backgroundColor = .red
+        btn.backgroundColor = .white
+        btn.layer.borderColor = UIColor.red.cgColor
+        btn.layer.borderWidth = 1
         btn.layer.cornerRadius = 30
+        btn.setImage(UIImage(named: "try")?.withRenderingMode(.alwaysOriginal), for: .normal)
         btn.translatesAutoresizingMaskIntoConstraints = false
         return btn
     }()
@@ -23,6 +26,8 @@ class HomeViewController: UIViewController {
         // Do any additional setup after loading the view.
         view.backgroundColor = .white
         addCustomView()
+        
+        self.navigationItem.title = "Home"
     }
     
     private func addCustomView() {

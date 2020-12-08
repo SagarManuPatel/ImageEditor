@@ -53,6 +53,79 @@ class PreviewPhotoContainerView: BaseClass {
         return slider
     }()
     
+
+    override func addCustomViews() {
+        addSubview(previewImageView)
+        previewImageView.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
+        
+        previewImageView.addSubview(canvas)
+        canvas.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 60, paddingRight: 0, width: 0, height: 0)
+        
+        addSubview(saveButtonView)
+        saveButtonView.anchor(top: topAnchor, leading: leadingAnchor, bottom: nil, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
+        
+        addSubview(editorView)
+        editorView.anchor(top: topAnchor, leading: leadingAnchor, bottom: nil, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
+        
+        addSubview(bottomCollectionView)
+        bottomCollectionView.anchor(top: nil, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
+        
+        addSubview(slider)
+        slider.anchor(top: nil, leading: leadingAnchor, bottom: bottomCollectionView.topAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 16, paddingBottom: 8, paddingRight: 16, width: 0, height: 20)
+        
+        editorView.isHidden = true
+        bottomCollectionView.isHidden = true
+        slider.isHidden = true
+        saveButtonView.pensilButton.addTarget(self, action: #selector(handleEditTapped), for: .touchUpInside)
+        saveButtonView.saveButton.addTarget(self, action: #selector(handleSaveImageTapped), for: .touchUpInside)
+        saveButtonView.cancelButton.addTarget(self, action: #selector(handleCancelTapped), for: .touchUpInside)
+        
+        
+        editorView.doneButton.addTarget(self, action: #selector(handleDoneTapped), for: .touchUpInside)
+        editorView.clearButton.addTarget(self, action: #selector(handleClear), for: .touchUpInside)
+        editorView.undoButton.addTarget(self, action: #selector(handleUndo), for: .touchUpInside)
+        bottomCollectionView.register(ColorSelectCell.self, forCellWithReuseIdentifier: cellID)
+    }
+}
+
+
+//MARK:- Color CollectionView SetUp
+
+extension PreviewPhotoContainerView : UICollectionViewDelegate , UICollectionViewDataSource , UICollectionViewDelegateFlowLayout {
+    
+    
+    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+        return colorsArray.count
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellID, for: indexPath) as! ColorSelectCell
+        cell.containerView.backgroundColor = colorsArray[indexPath.item]
+        return cell
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
+        return CGSize(width: 60, height: 60)
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
+        return 0
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
+        canvas.setStrokeColor(color: colorsArray[indexPath.item])
+    }
+}
+
+
+//MARK:- Target And Getures
+
+extension PreviewPhotoContainerView {
+    
     @objc func handleSaveImageTapped() {
         let image = previewImageView.takeScreenshot()
         UIImageWriteToSavedPhotosAlbum(image, self, #selector(imageSaved(_:didFinishSavingWithError:contextType:)), nil)
@@ -112,38 +185,6 @@ class PreviewPhotoContainerView: BaseClass {
         self.removeFromSuperview()
     }
     
-    override func addCustomViews() {
-        addSubview(previewImageView)
-        previewImageView.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
-        
-        previewImageView.addSubview(canvas)
-        canvas.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 60, paddingRight: 0, width: 0, height: 0)
-        
-        addSubview(saveButtonView)
-        saveButtonView.anchor(top: topAnchor, leading: leadingAnchor, bottom: nil, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
-        
-        addSubview(editorView)
-        editorView.anchor(top: topAnchor, leading: leadingAnchor, bottom: nil, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
-        
-        addSubview(bottomCollectionView)
-        bottomCollectionView.anchor(top: nil, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
-        
-        addSubview(slider)
-        slider.anchor(top: nil, leading: leadingAnchor, bottom: bottomCollectionView.topAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 16, paddingBottom: 8, paddingRight: 16, width: 0, height: 20)
-        
-        editorView.isHidden = true
-        bottomCollectionView.isHidden = true
-        slider.isHidden = true
-        saveButtonView.pensilButton.addTarget(self, action: #selector(handleEditTapped), for: .touchUpInside)
-        saveButtonView.saveButton.addTarget(self, action: #selector(handleSaveImageTapped), for: .touchUpInside)
-        saveButtonView.cancelButton.addTarget(self, action: #selector(handleCancelTapped), for: .touchUpInside)
-        
-        
-        editorView.doneButton.addTarget(self, action: #selector(handleDoneTapped), for: .touchUpInside)
-        editorView.clearButton.addTarget(self, action: #selector(handleClear), for: .touchUpInside)
-        editorView.undoButton.addTarget(self, action: #selector(handleUndo), for: .touchUpInside)
-        bottomCollectionView.register(ColorSelectCell.self, forCellWithReuseIdentifier: cellID)
-    }
     
     @objc func handleCancelTapped() {
         self.removeFromSuperview()
@@ -180,37 +221,6 @@ class PreviewPhotoContainerView: BaseClass {
     
     @objc fileprivate func handleSliderChange() {
         canvas.setStrokeWidth(width: slider.value)
-    }
-}
-
-
-extension PreviewPhotoContainerView : UICollectionViewDelegate , UICollectionViewDataSource , UICollectionViewDelegateFlowLayout {
-    
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return colorsArray.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: cellID, for: indexPath) as! ColorSelectCell
-        cell.containerView.backgroundColor = colorsArray[indexPath.item]
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: 60, height: 60)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumLineSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
-        return 0
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        canvas.setStrokeColor(color: colorsArray[indexPath.item])
     }
     
 }
