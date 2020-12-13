@@ -9,6 +9,10 @@
 import UIKit
 import AVFoundation
 
+protocol CameraControllerProtocol : class {
+    func startCaptureSession()
+}
+
 class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, UIViewControllerTransitioningDelegate {
     
     let dismissButton: UIButton = {
@@ -30,6 +34,8 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, UIViewC
         button.addTarget(self, action: #selector(handleCapturePhoto), for: .touchUpInside)
         return button
     }()
+    
+    let captureSession = AVCaptureSession()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -76,15 +82,17 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, UIViewC
         let previewImage = UIImage(data: imageData!)
         
         let containerView = PreviewPhotoContainerView()
-        containerView.previewImageView.image = previewImage
+        containerView.delegate = self
+        containerView.canvas.image = previewImage
         view.addSubview(containerView)
         containerView.anchor(top: view.topAnchor, leading: view.leadingAnchor, bottom: view.bottomAnchor, trailing: view.trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
         
+        captureSession.stopRunning()
     }
     
     let output = AVCapturePhotoOutput()
     fileprivate func setupCaptureSession() {
-        let captureSession = AVCaptureSession()
+//        let captureSession = AVCaptureSession()
         
         //1. setup inputs
         guard let captureDevice = AVCaptureDevice.default(for: .video) else { return }
@@ -108,6 +116,15 @@ class CameraController: UIViewController, AVCapturePhotoCaptureDelegate, UIViewC
         previewLayer.frame = view.frame
         view.layer.addSublayer(previewLayer)
         
+        captureSession.startRunning()
+    }
+    
+}
+
+
+extension CameraController :  CameraControllerProtocol {
+    
+    func startCaptureSession() {
         captureSession.startRunning()
     }
     

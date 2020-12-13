@@ -8,11 +8,12 @@
 
 import UIKit
 
-class Canvas: UIView {
+class Canvas: UIImageView {
     
     // public function
     fileprivate var strokeColor = UIColor.red
     fileprivate var strokeWidth: Float = 1
+    var isClear : Bool = false
     
     func setStrokeWidth(width: Float) {
         self.strokeWidth = width
@@ -22,48 +23,50 @@ class Canvas: UIView {
         self.strokeColor = color
     }
     
-    func undo() {
-        _ = lines.popLast()
-        setNeedsDisplay()
-    }
-    
-    func clear() {
-        lines.removeAll()
-        setNeedsDisplay()
-    }
-    
-    fileprivate var lines = [Line]()
-    
-    override func draw(_ rect: CGRect) {
-        super.draw(rect)
-        
-        guard let context = UIGraphicsGetCurrentContext() else { return }
-        
-        lines.forEach { (line) in
-            context.setStrokeColor(line.color.cgColor)
-            context.setLineWidth(CGFloat(line.strokeWidth))
-            context.setLineCap(.round)
-            for (i, p) in line.points.enumerated() {
-                if i == 0 {
-                    context.move(to: p)
-                } else {
-                    context.addLine(to: p)
-                }
-            }
-            context.strokePath()
-        }
-    }
-    
+    var previousPoint1 = CGPoint()
+
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        lines.append(Line.init(strokeWidth: strokeWidth, color: strokeColor, points: []))
+        guard let touch = touches.first else { return }
+        previousPoint1 = touch.previousLocation(in: self)
     }
-    
+
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let point = touches.first?.location(in: nil) else { return }
-        guard var lastLine = lines.popLast() else { return }
-        lastLine.points.append(point)
-        lines.append(lastLine)
-        setNeedsDisplay()
+        guard let touch = touches.first else { return }
+
+        let previousPoint2 = previousPoint1
+        previousPoint1 = touch.previousLocation(in: self)
+        let currentPoint = touch.location(in: self)
+
+
+        // calculate mid point
+        let mid1 = midPoint(p1: previousPoint1, p2: previousPoint2)
+        let mid2 = midPoint(p1: currentPoint, p2: previousPoint1)
+
+        UIGraphicsBeginImageContext(self.frame.size)
+        guard let context = UIGraphicsGetCurrentContext() else { return }
+        if let image = self.image {
+            image.draw(in: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
+        }
+    
+        context.move(to: mid1)
+        context.addQuadCurve(to: mid2, control: previousPoint1)
+        
+        if isClear {
+            context.setBlendMode(.clear)
+        }else{
+            context.setBlendMode(.normal)
+        }
+        context.setLineCap(.round)
+        context.setLineWidth(CGFloat(self.strokeWidth))
+        context.setStrokeColor(self.strokeColor.cgColor)
+        context.strokePath()
+
+        self.image = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+    }
+
+    func midPoint(p1: CGPoint, p2: CGPoint) -> CGPoint {
+        return CGPoint(x: (p1.x + p2.x) / 2.0, y: (p1.y + p2.y) / 2.0)
     }
     
 }

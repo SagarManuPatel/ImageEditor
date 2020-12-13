@@ -13,6 +13,8 @@ class PreviewPhotoContainerView: BaseClass {
     
     let cellID = "ColorSelectCell"
     
+    weak var delegate : CameraControllerProtocol?
+    
     var colorsArray: [UIColor] = [#colorLiteral(red: 1, green: 0.1491314173, blue: 0, alpha: 1), #colorLiteral(red: 0.9529411793, green: 0.6862745285, blue: 0.1333333403, alpha: 1), #colorLiteral(red: 1, green: 0.4059419876, blue: 0.2455089305, alpha: 1), #colorLiteral(red: 0.1764705926, green: 0.01176470611, blue: 0.5607843399, alpha: 1), #colorLiteral(red: 0.1764705926, green: 0.4980392158, blue: 0.7568627596, alpha: 1), #colorLiteral(red: 1, green: 0.4059419876, blue: 0.2455089305, alpha: 1), #colorLiteral(red: 0.06274510175, green: 0, blue: 0.1921568662, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.8078431487, green: 0.02745098062, blue: 0.3333333433, alpha: 1), #colorLiteral(red: 0.2745098174, green: 0.4862745106, blue: 0.1411764771, alpha: 1), #colorLiteral(red: 0.3647058904, green: 0.06666667014, blue: 0.9686274529, alpha: 1), #colorLiteral(red: 0.8549019694, green: 0.250980407, blue: 0.4784313738, alpha: 1), #colorLiteral(red: 0.9411764741, green: 0.4980392158, blue: 0.3529411852, alpha: 1), #colorLiteral(red: 1, green: 1, blue: 1, alpha: 1), #colorLiteral(red: 0.3176470697, green: 0.07450980693, blue: 0.02745098062, alpha: 1), #colorLiteral(red: 0.9529411793, green: 0.6862745285, blue: 0.1333333403, alpha: 1), #colorLiteral(red: 0.3823936913, green: 0.8900789089, blue: 1, alpha: 1), #colorLiteral(red: 1, green: 0.4528176247, blue: 0.4432695911, alpha: 1), #colorLiteral(red: 0.05882352963, green: 0.180392161, blue: 0.2470588237, alpha: 1), #colorLiteral(red: 0.9254902005, green: 0.2352941185, blue: 0.1019607857, alpha: 1)]
     
     var selectedColorIndex : Int? {
@@ -20,11 +22,6 @@ class PreviewPhotoContainerView: BaseClass {
             bottomCollectionView.reloadData()
         }
     }
-    
-    let previewImageView: UIImageView = {
-        let iv = UIImageView()
-        return iv
-    }()
     
     let canvas : Canvas = {
         let c = Canvas()
@@ -55,18 +52,16 @@ class PreviewPhotoContainerView: BaseClass {
     let slider: UISlider = {
         let slider = UISlider()
         slider.minimumValue = 1
-        slider.maximumValue = 10
+        slider.maximumValue = 20
         slider.addTarget(self, action: #selector(handleSliderChange), for: .valueChanged)
         return slider
     }()
     
 
     override func addCustomViews() {
-        addSubview(previewImageView)
-        previewImageView.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
-        
-        previewImageView.addSubview(canvas)
-        canvas.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 60, paddingRight: 0, width: 0, height: 0)
+       
+        addSubview(canvas)
+        canvas.anchor(top: topAnchor, leading: leadingAnchor, bottom: bottomAnchor, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 0)
         
         addSubview(saveButtonView)
         saveButtonView.anchor(top: topAnchor, leading: leadingAnchor, bottom: nil, trailing: trailingAnchor, paddingTop: 0, paddingLeft: 0, paddingBottom: 0, paddingRight: 0, width: 0, height: 60)
@@ -90,10 +85,9 @@ class PreviewPhotoContainerView: BaseClass {
         
         editorView.doneButton.addTarget(self, action: #selector(handleDoneTapped), for: .touchUpInside)
         editorView.clearButton.addTarget(self, action: #selector(handleClear), for: .touchUpInside)
-        editorView.undoButton.addTarget(self, action: #selector(handleUndo), for: .touchUpInside)
         bottomCollectionView.register(ColorSelectCell.self, forCellWithReuseIdentifier: cellID)
         
-        previewImageView.addGestureRecognizer(UIPinchGestureRecognizer(target: self, action: #selector(handlePinch)))
+        canvas.addGestureRecognizer(UIPinchGestureRecognizer(target: self, action: #selector(handlePinch)))
         
     }
 }
@@ -129,6 +123,7 @@ extension PreviewPhotoContainerView : UICollectionViewDelegate , UICollectionVie
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         self.selectedColorIndex = indexPath.item
+        canvas.isClear = false
         canvas.setStrokeColor(color: colorsArray[indexPath.item])
     }
 }
@@ -139,7 +134,7 @@ extension PreviewPhotoContainerView : UICollectionViewDelegate , UICollectionVie
 extension PreviewPhotoContainerView {
     
     @objc func handleSaveImageTapped() {
-        let image = previewImageView.takeScreenshot()
+        let image = canvas.takeScreenshot()
         UIImageWriteToSavedPhotosAlbum(image, self, #selector(imageSaved(_:didFinishSavingWithError:contextType:)), nil)
     }
     
@@ -194,12 +189,8 @@ extension PreviewPhotoContainerView {
         }
     }
     
-    @objc func handleCancel() {
-        self.removeFromSuperview()
-    }
-    
-    
     @objc func handleCancelTapped() {
+        self.delegate?.startCaptureSession()
         self.removeFromSuperview()
     }
     
@@ -208,7 +199,7 @@ extension PreviewPhotoContainerView {
         editorView.isHidden = false
         bottomCollectionView.isHidden = false
         slider.isHidden = false
-        previewImageView.isUserInteractionEnabled = true
+        canvas.isUserInteractionEnabled = true
     }
     
     @objc func handleDoneTapped() {
@@ -216,16 +207,11 @@ extension PreviewPhotoContainerView {
         editorView.isHidden = true
         bottomCollectionView.isHidden = true
         slider.isHidden = true
-        previewImageView.isUserInteractionEnabled = false
-    }
-    
-    @objc fileprivate func handleUndo() {
-        print("Undo lines drawn")
-        canvas.undo()
+        canvas.isUserInteractionEnabled = false
     }
     
     @objc func handleClear() {
-        canvas.clear()
+        canvas.isClear = true
     }
     
     @objc fileprivate func handleColorChange(button: UIButton) {
