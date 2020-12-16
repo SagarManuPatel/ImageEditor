@@ -42,11 +42,6 @@ class HomeViewController: UIViewController {
         
     }
     
-    @objc func handleViewTapped() {
-        let cameraController = CameraController()
-        present(cameraController, animated: true, completion: nil)
-    }
-    
     @objc func handleOpenCamera() {
         cameraButton.isUserInteractionEnabled = false
         let pulse = Pulsing(numberOfPulses: 1, radius: 110, Position: cameraButton.center)
@@ -54,6 +49,7 @@ class HomeViewController: UIViewController {
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
             let cameraController = CameraController()
+            cameraController.modalPresentationStyle = .fullScreen
             self.present(cameraController, animated: true) {
                 self.cameraButton.isUserInteractionEnabled = true
             }

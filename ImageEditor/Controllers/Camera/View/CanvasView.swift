@@ -42,7 +42,7 @@ class Canvas: UIImageView {
         let mid1 = midPoint(p1: previousPoint1, p2: previousPoint2)
         let mid2 = midPoint(p1: currentPoint, p2: previousPoint1)
 
-        UIGraphicsBeginImageContext(self.frame.size)
+        UIGraphicsBeginImageContextWithOptions(self.frame.size, false, 2.0)
         guard let context = UIGraphicsGetCurrentContext() else { return }
         if let image = self.image {
             image.draw(in: CGRect(x: 0, y: 0, width: frame.size.width, height: frame.size.height))
